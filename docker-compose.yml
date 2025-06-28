@@ -1,0 +1,34 @@
+services:
+  app-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    volumes:
+      - go-modules:/go/pkg/mod
+    environment:
+      - GO_ENV=development
+    ports:
+      - "6379:6379"
+    networks:
+      - app-network-dev
+
+    command: sh -c "while [ ! -f /app/go.mod ]; do sleep 1; done && CompileDaemon --build='go build -o /app/build/toy-redis /app/server/main.go' --command='/app/build/toy-redis' --color=true -pattern='(.+\\.go|.+\\.env)$$' --directory='/app' --verbose"
+    develop:
+      watch:
+        - action: sync
+          path: .
+          target: /app
+          ignore:
+            - /app/.git/
+            - .gitignore
+            - build/
+            - vendor/
+            - "*.md"
+
+volumes:
+  go-modules:
+
+networks:
+  app-network-dev:
+    driver: bridge
