@@ -6,6 +6,7 @@ import (
 	"io"
 	"net"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -21,7 +22,7 @@ type Client struct {
 	connection net.Conn
 }
 
-var connectionCounter int
+var connectionCounter int64
 
 func (server *Server) Run() {
 	zerolog.SetGlobalLevel(zerolog.ErrorLevel)
@@ -45,11 +46,11 @@ func (server *Server) Run() {
 			connection: connection,
 		}
 		go client.handleRequest(storage, connectionCounter)
-		connectionCounter++
+		atomic.AddInt64(&connectionCounter, 1)
 	}
 }
 
-func (client *Client) handleRequest(storage *KVStore, connectionCounter int) string {
+func (client *Client) handleRequest(storage *KVStore, connectionCounter int64) string {
 	reader := bufio.NewReader(client.connection)
 	defer client.connection.Close()
 	client.connection.SetReadDeadline(time.Now().Add(2 * time.Minute))

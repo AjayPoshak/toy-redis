@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"net"
 	"strconv"
@@ -14,15 +15,19 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func PerformGetOperation(connection net.Conn, connectionNumber int) error {
-	connection.Write([]byte("GET count\n"))
-	buffer := make([]byte, 1024)
-	n, err := connection.Read(buffer)
+type ConnectionHandler struct {
+	connection net.Conn
+	reader     *bufio.Reader
+}
+
+func (connHandler *ConnectionHandler) PerformGetOperation(connectionNumber int) error {
+	connHandler.connection.Write([]byte("GET count\n"))
+	line, err := connHandler.reader.ReadString('\n')
 	if err != nil {
 		log.Error().Err(err).Int("connection_number", connectionNumber).Msg("Error reading response for GET operation")
 		return err
 	}
-	responseText := strings.TrimSpace(string(buffer[:n]))
+	responseText := strings.TrimSpace(line)
 	var currentCounter int
 	if len(responseText) != 0 {
 		currentCounter, err = strconv.Atoi(responseText)
@@ -35,17 +40,15 @@ func PerformGetOperation(connection net.Conn, connectionNumber int) error {
 	return nil
 }
 
-func PerformSetOperation(connection net.Conn, connectionNumber int) error {
-	buffer := make([]byte, 1024)
+func (connHandler *ConnectionHandler) PerformSetOperation(connectionNumber int) error {
 	newCounter := connectionNumber
-	connection.Write([]byte("SET count" + fmt.Sprintf(" %d\n", newCounter)))
-	_, err := connection.Read(buffer)
+	connHandler.connection.Write([]byte("SET count" + fmt.Sprintf(" %d\n", newCounter)))
+	line, err := connHandler.reader.ReadString('\n')
 	if err != nil {
 		log.Error().Err(err).Int("connection_number", connectionNumber).Msgf("Error reading response for SET operation: %s", err)
 		return err
 	}
-	meaningful := strings.Trim(string(buffer), "\x00\n")
-	log.Info().Int("connection_number", connectionNumber).Msgf("Write successful new count: %s", meaningful)
+	log.Info().Int("connection_number", connectionNumber).Msgf("Write successful new count: %s", line)
 	return nil
 }
 
@@ -55,11 +58,11 @@ func PerformOperations(connection net.Conn, connectionNumber int) {
 		switch operation {
 		case "GET":
 			{
-				PerformGetOperation(connection, connectionNumber)
+				// PerformGetOperation(connection, connectionNumber)
 			}
 		case "SET":
 			{
-				PerformSetOperation(connection, connectionNumber)
+				// PerformSetOperation(connection, connectionNumber)
 			}
 		}
 	}
@@ -81,7 +84,7 @@ const HOST = "3.91.71.134"
 
 func SustainedLoadTest() {
 	testDuration := 1 * time.Minute
-	maxConnections := 1500
+	maxConnections := 1300
 	var waitGroup sync.WaitGroup
 	var totalOps int64
 	var errors int64
@@ -90,25 +93,31 @@ func SustainedLoadTest() {
 		waitGroup.Add(1)
 		go func(connectionNumber int) {
 			connection, err := net.Dial("tcp", HOST+":6379")
-			// connection.SetWriteDeadline(time.Now().Add(40 * time.Second))
-			// connection.SetReadDeadline(time.Now().Add(40 * time.Second))
+			connection.SetDeadline(time.Now().Add(testDuration))
 			if err != nil {
 				atomic.AddInt64(&errors, 1)
 				log.Error().Err(err).Int("connection_number", connectionNumber).Msg("Error connecting to server:")
 				return
 			}
+			connection.SetDeadline(time.Now().Add(testDuration))
 			defer waitGroup.Done()
 			defer connection.Close()
+			connHandler := &ConnectionHandler{
+				connection: connection,
+				reader:     bufio.NewReader(connection),
+			}
 			for time.Since(now) < testDuration {
 				if rand.IntN(100) < 80 {
-					er := PerformGetOperation(connection, connectionNumber)
+					er := connHandler.PerformGetOperation(connectionNumber)
 					if er != nil {
 						atomic.AddInt64(&errors, 1)
+						return
 					}
 				} else {
-					er := PerformSetOperation(connection, connectionNumber)
+					er := connHandler.PerformSetOperation(connectionNumber)
 					if er != nil {
 						atomic.AddInt64(&errors, 1)
+						return
 					}
 				}
 				atomic.AddInt64(&totalOps, 1)
