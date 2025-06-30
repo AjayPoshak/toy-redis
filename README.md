@@ -70,6 +70,6 @@ Ops per second: 3802.77
 ```
 
 Here is the visualization of the results:
-![Load Test Results](https://raw.githubusercontent.com/toy-redis/load_testing_results.png)
+![Load Test Results](./load_testing_results.png)
 
 So clearly it can support 1000 concurrent connections with around 3k ops per second while keeping the error rate very low. The error rate increases with the number of connections.
