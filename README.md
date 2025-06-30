@@ -16,7 +16,7 @@ go run server/*.go
 ```
 
 Or use docker compose
-``
+```
 docker compose build
 docker compose up
 
