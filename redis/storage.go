@@ -3,7 +3,7 @@ package redis
 import "sync"
 
 type KVStore struct {
-	mutex sync.Mutex
+	mutex sync.RWMutex
 	store map[string]string
 }
 
@@ -21,8 +21,8 @@ func (kvStore *KVStore) Set(key string, value string) string {
 }
 
 func (kvStore *KVStore) Get(key string) string {
-  kvStore.mutex.Lock()
-  defer kvStore.mutex.Unlock()
+	kvStore.mutex.RLock()
+	defer kvStore.mutex.RUnlock()
 	value, ok := kvStore.store[key]
 	if ok {
 		return value
