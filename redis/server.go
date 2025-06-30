@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"net"
-	"runtime"
 	"strings"
 	"time"
 
@@ -33,12 +32,6 @@ func (server *Server) Run() {
 		log.Error().Err(err).Msg("Error starting server:")
 	}
 	defer listener.Close()
-	go func() {
-		for {
-			fmt.Printf("===================> Active goroutines: %d\n", runtime.NumGoroutine())
-			time.Sleep(5 * time.Second)
-		}
-	}()
 
 	for {
 		log.Info().Msg("Waiting for new connection...")
@@ -59,7 +52,7 @@ func (server *Server) Run() {
 func (client *Client) handleRequest(storage *KVStore, connectionCounter int) string {
 	reader := bufio.NewReader(client.connection)
 	defer client.connection.Close()
-	client.connection.SetReadDeadline(time.Now().Add(5 * time.Second))
+	client.connection.SetReadDeadline(time.Now().Add(2 * time.Minute))
 
 	for {
 		response := ""
