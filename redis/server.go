@@ -60,16 +60,16 @@ func (client *Client) handleRequest(storage *KVStore, connectionCounter int64) s
 		message, err := reader.ReadString('\n')
 		if err != nil {
 			if err == io.EOF {
-				log.Info().Int("connection_counter", connectionCounter).Msg("Client %d disconnected gracefully")
+				log.Info().Int64("connection_counter", connectionCounter).Msg("Client disconnected gracefully")
 			} else {
-				log.Error().Int("connection_counter", connectionCounter).Err(err).Msg("Error reading from client ")
+				log.Error().Int64("connection_counter", connectionCounter).Err(err).Msg("Error reading from client")
 			}
 			return response
 		}
 
 		tokens := strings.Split(message, " ")
 		if len(tokens) == 0 {
-			log.Error().Int("connection_counter", connectionCounter).Msg("Client sent an empty query")
+			log.Error().Int64("connection_counter", connectionCounter).Msg("Client sent an empty query")
 			return ""
 		}
 		switch tokens[0] {
@@ -81,13 +81,13 @@ func (client *Client) handleRequest(storage *KVStore, connectionCounter int64) s
 
 		case "SET":
 			{
-				log.Info().Int("connection_counter", connectionCounter).Msgf("Client %d sent SET command", connectionCounter)
+				log.Info().Int64("connection_counter", connectionCounter).Msgf("Client sent SET command")
 				response = SET(storage, tokens, connectionCounter)
 			}
 		}
-		log.Info().Int("connection_counter", connectionCounter).Msgf("Sending response back %s", response)
+		log.Info().Int64("connection_counter", connectionCounter).Msgf("Sending response back %s", response)
 		client.connection.Write([]byte(response))
 		client.connection.Write([]byte("\n"))
-		log.Info().Int("connection_counter", connectionCounter).Msgf("Response sent to client %s", response)
+		log.Info().Int64("connection_counter", connectionCounter).Msgf("Response sent to client %s", response)
 	}
 }

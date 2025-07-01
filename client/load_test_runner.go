@@ -52,35 +52,9 @@ func (connHandler *ConnectionHandler) PerformSetOperation(connectionNumber int) 
 	return nil
 }
 
-func PerformOperations(connection net.Conn, connectionNumber int) {
-	operations := []string{"GET", "GET", "GET", "SET", "SET"}
-	for _, operation := range operations {
-		switch operation {
-		case "GET":
-			{
-				// PerformGetOperation(connection, connectionNumber)
-			}
-		case "SET":
-			{
-				// PerformSetOperation(connection, connectionNumber)
-			}
-		}
-	}
-}
-
-func Connect(connectionNumber int) {
-	connection, err := net.Dial("tcp", "0.0.0.0:6379")
-	if err != nil {
-		log.Error().Err(err).Msg("Error connecting to server:")
-		return
-	}
-	PerformOperations(connection, connectionNumber)
-	defer connection.Close()
-}
-
 const TOTAL_CONNECTIONS = 10000
 const CONCURRENT_CONNECTIONS = 1000
-const HOST = "3.91.71.134"
+const HOST = "localhost"
 
 func SustainedLoadTest() {
 	testDuration := 1 * time.Minute
@@ -136,18 +110,4 @@ func SustainedLoadTest() {
 
 func main() {
 	SustainedLoadTest()
-	// var WaitGroup sync.WaitGroup
-	// for i := 0; i < TOTAL_CONNECTIONS; i += CONCURRENT_CONNECTIONS {
-	// 	WaitGroup.Add(CONCURRENT_CONNECTIONS)
-	// 	for j := 0; j < CONCURRENT_CONNECTIONS; j++ {
-	// 		go func() {
-	// 			Connect(i + j)
-	// 			defer WaitGroup.Done()
-	// 		}()
-	// 	}
-	// 	log.Info().Msgf("Waiting for %d connections to finish", CONCURRENT_CONNECTIONS)
-	// 	WaitGroup.Wait()
-	// 	time.Sleep(5 * time.Second)
-	// 	log.Info().Msgf("Finished waiting for %d connections", CONCURRENT_CONNECTIONS)
-	// }
 }
