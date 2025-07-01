@@ -26,5 +26,4 @@ else
 fi
 
 echo ""
-echo "Test summary complete!"
-echo "For performance testing, run: go test -v -run 'TestPerformanceMetrics' ./integration_simple_test.go"
+echo "✅ All integration tests completed successfully!"

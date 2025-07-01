@@ -55,14 +55,14 @@ This project uses comprehensive integration tests that validate the complete sys
 ### Full Test Suite
 
 ```bash
-# Run all tests including benchmarks
-./run_all_tests.sh
+# Run all integration tests
+go test -v -run "Test" ./integration_simple_test.go
 ```
 
 ### Performance Testing
 
 ```bash
-# Run performance benchmarks
+# Run performance tests
 go test -v -run "TestPerformanceMetrics" ./integration_simple_test.go
 ```
 
