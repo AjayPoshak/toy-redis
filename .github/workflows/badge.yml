@@ -1,0 +1,23 @@
+name: Update Badge
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types:
+      - completed
+
+jobs:
+  badge:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    
+    steps:
+    - name: Update badge
+      uses: schneegans/dynamic-badges-action@v1.6.0
+      with:
+        auth: ${{ secrets.GITHUB_TOKEN }}
+        gistID: ${{ secrets.BADGE_GIST_ID }}
+        filename: toy-redis-tests.json
+        label: tests
+        message: ${{ github.event.workflow_run.conclusion }}
+        color: ${{ github.event.workflow_run.conclusion == 'success' && 'brightgreen' || 'red' }}

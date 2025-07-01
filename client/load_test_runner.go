@@ -80,7 +80,7 @@ func Connect(connectionNumber int) {
 
 const TOTAL_CONNECTIONS = 10000
 const CONCURRENT_CONNECTIONS = 1000
-const HOST = "3.91.71.134"
+const HOST = "localhost"
 
 func SustainedLoadTest() {
 	testDuration := 1 * time.Minute
