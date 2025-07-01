@@ -1,21 +1,8 @@
 # toy-redis
 
-[![CI](https://github.com/YOUR_USERNAME/toy-redis/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_USERNAME/toy-redis/actions/workflows/ci.yml)
-[![Go Report Card](https://goreportcard.com/badge/github.com/YOUR_USERNAME/toy-redis)](https://goreportcard.com/report/github.com/YOUR_USERNAME/toy-redis)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-
 This is a simple in-memory key value store built in Go. It is designed to be a minimal implementation of a Redis-like server for educational purposes.
 
-## ✨ Features
-
-- **High Performance**: 90,000+ operations per second
-- **Concurrent Access**: Supports 1000+ simultaneous connections
-- **Thread Safe**: Uses RWMutex for optimal read/write performance
-- **Redis-like Protocol**: Familiar SET/GET operations
-- **Docker Support**: Ready-to-use container
-- **Cross Platform**: Runs on Linux, macOS, and Windows
-
-## 🚀 Supported Operations
+## Supported Operations
 
 - `SET key value` - Set the value of a key
 - `GET key` - Get the value of a key
@@ -40,48 +27,6 @@ To run the client, make sure `netcat` is installed on your machine. You can use 
 ```bash
 nc localhost 6379
 ```
-
-## 🧪 Testing
-
-This project uses comprehensive integration tests that validate the complete system behavior:
-
-### Quick Test
-
-```bash
-# Run basic functionality and concurrency tests
-./run_tests.sh
-```
-
-### Full Test Suite
-
-```bash
-# Run all integration tests
-go test -v -run "Test" ./integration_simple_test.go
-```
-
-### Performance Testing
-
-```bash
-# Run performance tests
-go test -v -run "TestPerformanceMetrics" ./integration_simple_test.go
-```
-
-### Test Results
-
-- **91,000+ operations per second** with 10 concurrent clients
-- **0% error rate** under sustained load
-- Full concurrency validation with RWMutex
-- Cross-platform compatibility testing
-
-### CI/CD
-
-All tests run automatically on:
-
-- Every push to main/master/develop branches
-- Every pull request
-- Cross-platform builds (Linux, macOS, Windows)
-- Docker container testing
-- Security vulnerability scanning
 
 ## Concurrency
 
@@ -133,4 +78,4 @@ So clearly it can support 1000 concurrent connections with around 3k ops per sec
 
 1. Move read write mutex to `sync.Map` because it has no locks for reading the map which will improves performance for read heavy workloads.
 2. On t3.medium machine, I went with default "ulimit" i.e. file descriptor limit, thus allowing only 1k concurrent connections. This can be configured to a higher number unlocking greater concurrency. Each port can communicate to client using multiple sockets. Usually there is one socket for each client connection, so number of concurrent clients are limited by number of sockets a machine can create. Each socket is essentially a file, thus number of sockets are dependent upon number of file descriptors a system can support. And `ulimit` helps us configure a higher number of file descriptor. But each increment in number of file descriptor also means increment in memory and CPU usage. Therefore, it requires careful tuning, we cannot blindly set it to maximum possible number.
-3. Instead of 1000 goroutines fighting to acquire lock, I can just have one thread which has acess to storage. And all goroutines can send commands to this thread via message passing. It will be lighter on CPU, but increase the memory consumption since each message now needs to be copied over to a channel. But memory is cheap, and compute is expensive. :)
+3. Instead of 1000 goroutines fighting to acquire lock, I can just have one thread which has acess to storage. And all goroutines can send commands to this thread via message passing. This is "Single Writer" pattern.
